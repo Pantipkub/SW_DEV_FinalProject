@@ -2,7 +2,7 @@
  * @swagger
  * components:
  *   schemas: 
- *     Hospital:
+ *     MassageCenter:
  *       type: object
  *       required:
  *         - name
@@ -11,14 +11,14 @@
  *         id:
  *           type: string
  *           format: uuid
- *           description: The auto-generated id of the hospital
+ *           description: The auto-generated id of the massage center
  *           example: d290f1ee-6c54-4b01-90e6-d701748f0851
  *         ลําดับ:
  *           type: string
  *           description: Ordinal number
  *         name:
  *           type: string
- *           description: Hospital name
+ *           description: massage center name
  *         address:
  *           type: string
  *           description: House No., Street, Road
@@ -40,7 +40,7 @@
  *       example:
  *         id: 609bda561452242d88d36e37
  *         ลําดับ: 
- *         name: Happy Hospital 
+ *         name: Happy Massage Center
  *         address: 121 ถ.สุขุมวิท
  *         district: บางนา
  *         province: กรุงเทพมหานคร
@@ -52,128 +52,128 @@
 /**
  * @swagger
  * tags:
- *   name: Hospitals
- *   description: The hospitals managing API
+ *   name: MassageCenters
+ *   description: The massage centers managing API
  */
 
 /**
  * @swagger
- * /hospitals:
+ * /massageCenters:
  *   get:
- *     summary: Returns the list of all the hospitals
- *     tags: [Hospitals]
+ *     summary: Returns the list of all the massage centers
+ *     tags: [MassageCenters]
  *     responses:
  *       200:
- *         description: The list of the hospitals
+ *         description: The list of the massage centers
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/Hospital'
+ *                 $ref: '#/components/schemas/MassageCenter'
  */
 
 /**
  * @swagger
- * /hospitals/{id}:
+ * /massageCenters/{id}:
  *   get:
- *     summary: Get the hospital by id
- *     tags: [Hospitals]
+ *     summary: Get the massage center by id
+ *     tags: [MassageCenters]
  *     parameters:
  *       - in: path
  *         name: id
  *         schema:
  *           type: string
  *         required: true
- *         description: The hospital id
+ *         description: The massage center id
  *     responses:
  *       200:
- *         description: The hospital description by id
+ *         description: The massage center description by id
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Hospital'
+ *               $ref: '#/components/schemas/MassageCenter'
  *       404:
- *         description: The hospital was not found
+ *         description: The massage center was not found
  */
 
 /**
  * @swagger
- * /hospitals:
+ * /massageCenters:
  *   post:
- *     summary: Create a new hospital
- *     tags: [Hospitals]
+ *     summary: Create a new massage center
+ *     tags: [MassageCenters]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Hospital'
+ *             $ref: '#/components/schemas/MassageCenter'
  *     responses:
  *       201:
- *         description: The hospital was successfully created
+ *         description: The massage center was successfully created
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Hospital'
+ *               $ref: '#/components/schemas/MassageCenter'
  *       500:
  *         description: Some server error
  */
 
 /**
  * @swagger
- * /hospitals/{id}:
+ * /massageCenters/{id}:
  *   put:
- *     summary: Update the hospital by id
- *     tags: [Hospitals]
+ *     summary: Update the massage center by id
+ *     tags: [MassageCenters]
  *     parameters:
  *       - in: path
  *         name: id
  *         schema:
  *           type: string
  *         required: true
- *         description: The hospital id
+ *         description: The massage center id
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Hospital'
+ *             $ref: '#/components/schemas/MassageCenter'
  *     responses:
  *       200:
- *         description: The hospital was updated
+ *         description: The massage center was updated
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Hospital'
+ *               $ref: '#/components/schemas/MassageCenter'
  *       404:
- *         description: The hospital was not found
+ *         description: The massage center was not found
  *       500:
  *         description: Some error happened
  */
 
 /**
  * @swagger
- * /hospitals/{id}:
+ * /massageCenters/{id}:
  *   delete:
- *     summary: Remove the hospital by id
- *     tags: [Hospitals]
+ *     summary: Remove the massage center by id
+ *     tags: [MassageCenters]
  *     parameters:
  *       - in: path
  *         name: id
  *         schema:
  *           type: string
  *         required: true
- *         description: The hospital id
+ *         description: The massage center id
  *     responses:
  *       200:
- *         description: The hospital was deleted
+ *         description: The massage center was deleted
  *       404:
- *         description: The hospital was not found
+ *         description: The massage center was not found
  */
 
 const express = require("express");
-const { getHospitals, getHospital, createHospitals, updateHospital, deleteHospital } = require("../controllers/hospitals");
+const { getMassageCenters, getMassageCenter, createMassageCenters, updateMassageCenter, deleteMassageCenter } = require("../controllers/massageCenters");
 
 // Include other resource routers
 const appointmentRouter = require('./appointments');
@@ -183,15 +183,15 @@ const router = express.Router();
 const { protect, authorize } = require('../middleware/auth'); // Check if they have permission to do the methods
 
 // Re-route into other resource routers
-router.use('/:hospitalId/appointments', appointmentRouter); 
+router.use('/:massageCenterId/appointments', appointmentRouter); 
 
 router.route("/")
-  .get(getHospitals)
-  .post(protect, authorize('admin'), createHospitals); // Put on the protect in front of a function
+  .get(getMassageCenters)
+  .post(protect, authorize('admin'), createMassageCenters); // Put on the protect in front of a function
 
 router.route("/:id")
-  .get(getHospital)
-  .put(protect, authorize('admin'), updateHospital)
-  .delete(protect, authorize('admin'), deleteHospital);
+  .get(getMassageCenter)
+  .put(protect, authorize('admin'), updateMassageCenter)
+  .delete(protect, authorize('admin'), deleteMassageCenter);
 
 module.exports = router;

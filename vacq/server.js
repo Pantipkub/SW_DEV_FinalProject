@@ -25,7 +25,7 @@ dotenv.config({ path: "./config/config.env" });
 connectDB();
 
 //Route fies
-const hospitals = require("./routes/hospitals");
+const massageCenters = require("./routes/massageCenters");
 const auth = require("./routes/auth");
 const appointments = require('./routes/appointments');
 
@@ -73,7 +73,7 @@ app.use(hpp());
 const swaggerDocs=swaggerJsDoc(swaggerOptions);
 app.use('/api-docs',swaggerUI.serve, swaggerUI.setup(swaggerDocs));
 
-app.use("/api/v1/hospitals", hospitals); //If the request refers to "/api/v1/hospitals", it will forward to the hospitals ("./routes/hospitals" path as of the line above)
+app.use("/api/v1/massageCenters", massageCenters); //If the request refers to "/api/v1/massageCenters", it will forward to the massageCenters ("./routes/massageCenters" path as of the line above)
 app.use("/api/v1/auth", auth);
 app.use('/api/v1/appointments', appointments);
 
