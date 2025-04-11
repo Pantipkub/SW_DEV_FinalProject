@@ -1,5 +1,6 @@
 const Appointment = require('../models/Appointment');
 const MassageCenter = require('../models/MassageCenter');
+const sendNotificationEmail = require('../utils/sendNotificationEmail'); // เปลี่ยน path ตามจริง
 
 //@desc     Get all appointments
 //@route    GET /api/v1/appointments
@@ -88,6 +89,15 @@ exports.addAppointment=async (req, res, next) => {
         
         const appointment = await Appointment.create(req.body);
 
+         // Send email notification
+         console.log(req.user.email);
+         await sendNotificationEmail(
+            req.user.email,  // ต้องแน่ใจว่า req.user มี email ด้วยนะ
+            req.user.name || "User",
+            "book",
+            `Massage Center: ${massageCenter.name}, Date: ${req.body.date}, Time: ${req.body.time || 'N/A'}`
+        );
+
         res.status(200).json({
             success: true,
             data: appointment
@@ -121,6 +131,12 @@ exports.updateAppointment=async (req, res, next) => {
             path: 'massageCenter',
             select: 'name province tel'
           });
+        await sendNotificationEmail(
+            req.user.email,  // ต้องแน่ใจว่า req.user มี email ด้วยนะ
+            req.user.name || "User",
+            "update",
+            `Massage Center: ${massageCenter.name}, Date: ${req.body.date}, Time: ${req.body.time || 'N/A'}`
+        );
 
         res.status(200).json({
             success: true,
@@ -150,6 +166,12 @@ exports.deleteAppointment=async (req, res, next) => {
 
         await appointment.deleteOne();
 
+        await sendNotificationEmail(
+            req.user.email,  
+            req.user.name || "User",
+            "cancel",
+            `Cancel kub, Date: ${req.body.date}, Time: ${req.body.time || 'N/A'}`
+        );
         res.status(200).json({
             success: true,
             data: {}

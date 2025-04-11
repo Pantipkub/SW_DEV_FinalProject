@@ -18,9 +18,11 @@ exports.protect=async (req,res,next)=>{
         //Verify token
         const decoded = jwt.verify(token,process.env.JWT_SECRET);
 
-        console.log(decoded);
+        //console.log(decoded);
+        console.log( decoded);  // ดูข้อมูลที่ decoded ได้
 
         req.user=await User.findById(decoded.id);
+        
 
         next();
     }catch(err){
