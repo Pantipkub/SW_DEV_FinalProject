@@ -1,7 +1,7 @@
 {
-  "name": "a-4-pantipkub",
+  "name": "final-project-massage-centers",
   "version": "1.0.0",
-  "description": "[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/WpvFJGGy)",
+  "description": "mongmong",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/2110503-67CP/a-4-Pantipkub.git"
+    "url": "git+https://github.com/Pantipkub/SW_DEV_FinalProject-2P"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/2110503-67CP/a-4-Pantipkub/issues"
+    "url": "https://github.com/Pantipkub/SW_DEV_FinalProject-2P/issues"
   },
-  "homepage": "https://github.com/2110503-67CP/a-4-Pantipkub#readme",
+  "homepage": "https://github.com/Pantipkub/SW_DEV_FinalProject-2P#readme",
   "dependencies": {
     "bcryptjs": "^3.0.0",
     "cookie-parser": "^1.4.7",
