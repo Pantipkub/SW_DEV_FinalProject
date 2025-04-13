@@ -79,6 +79,12 @@ exports.addAppointment=async (req, res, next) => {
         //Add user Id to req.body
         req.body.user = req.user.id;
 
+        const appointmentDate = new Date(req.body.apptDate);
+        const dateOnly = appointmentDate.toISOString().split('T')[0]; // YYYY-MM-DD
+        const timeOnly = appointmentDate.toISOString().split('T')[1].slice(0, 5); // "17:01"
+    
+
+
         //Check for wxisted appointment
         const existedAppointments = await Appointment.find({user:req.user.id});
 
@@ -89,14 +95,23 @@ exports.addAppointment=async (req, res, next) => {
         
         const appointment = await Appointment.create(req.body);
 
-         // Send email notification
-         console.log(req.user.email);
+         //Send email notification
          await sendNotificationEmail(
             req.user.email,  // ต้องแน่ใจว่า req.user มี email ด้วยนะ
             req.user.name || "User",
             "book",
-            `Massage Center: ${massageCenter.name}, Date: ${req.body.date}, Time: ${req.body.time || 'N/A'}`
-        );
+            `📍 Massage Center Reservation Confirmation
+
+            Hello ${req.user.name || 'Customer'},
+
+            🧖‍♀️ You have successfully booked a massage session.
+
+            🧾 **Booking Details:**
+            • Massage Center: ${massageCenter.name}
+            • Date: ${dateOnly}
+            • Time: ${timeOnly || 'N/A'}
+
+            Thank you for using our service. We look forward to seeing you! 😊`);
 
         res.status(200).json({
             success: true,
@@ -113,7 +128,7 @@ exports.addAppointment=async (req, res, next) => {
 //@access   Private
 exports.updateAppointment=async (req, res, next) => {
     try{
-        let appointment = await Appointment.findById(req.params.id);
+        let appointment = await Appointment.findById(req.params.id).populate('massageCenter');
 
         if(!appointment){
             return res.status(404).json({success:false, message:`No appointment with the id of ${req.params.id}`});
@@ -131,13 +146,28 @@ exports.updateAppointment=async (req, res, next) => {
             path: 'massageCenter',
             select: 'name province tel'
           });
+          const appointmentDate = new Date(req.body.apptDate);
+          const dateOnly = appointmentDate.toISOString().split('T')[0];
+          const timeOnly = appointmentDate.toISOString().split('T')[1].slice(0, 5); // "17:01"
+      
+        console.log(`${dateOnly} time : ${timeOnly}`);
+        
         await sendNotificationEmail(
-            req.user.email,  // ต้องแน่ใจว่า req.user มี email ด้วยนะ
+            req.user.email,
             req.user.name || "User",
             "update",
-            `Massage Center: ${massageCenter.name}, Date: ${req.body.date}, Time: ${req.body.time || 'N/A'}`
-        );
+       `
+        ✅ Your appointment has been successfully updated.
 
+        📍 Massage Center: ${appointment.massageCenter.name}
+        📅 New Date: ${dateOnly}
+        ⏰ New Time: ${timeOnly || 'N/A'}
+
+
+        Thank you for using our service! 🙌
+        `
+        );
+          
         res.status(200).json({
             success: true,
             data: appointment
@@ -153,7 +183,7 @@ exports.updateAppointment=async (req, res, next) => {
 //@access   Private
 exports.deleteAppointment=async (req, res, next) => {
     try{
-        const appointment = await Appointment.findById(req.params.id);
+        const appointment = await Appointment.findById(req.params.id).populate('massageCenter');
 
         if(!appointment){
             return res.status(404).json({success: false, message:`No appointment with the id of ${req.params.id}`});
@@ -164,14 +194,28 @@ exports.deleteAppointment=async (req, res, next) => {
             return res.status(401).json({succes: false, message:`User ${req.user.id} is not authorized to delete this bootcamp`})
         }
 
-        await appointment.deleteOne();
 
-        await sendNotificationEmail(
-            req.user.email,  
+        const appointmentDate = new Date(appointment.apptDate);
+        const dateOnly = appointmentDate.toISOString().split('T')[0];
+        const timeOnly = appointmentDate.toISOString().split('T')[1].slice(0, 5); // "17:01"
+
+        await appointment.deleteOne();
+        
+         // Send cancellation email
+         await sendNotificationEmail(
+            req.user.email,
             req.user.name || "User",
             "cancel",
-            `Cancel kub, Date: ${req.body.date}, Time: ${req.body.time || 'N/A'}`
+        `
+        Your appointment has been successfully cancelled.
+
+        📍 Massage Center: ${appointment.massageCenter.name}
+        📅 Date: ${dateOnly}
+        ⏰ Time: ${timeOnly || 'N/A'}
+        
+        `
         );
+
         res.status(200).json({
             success: true,
             data: {}

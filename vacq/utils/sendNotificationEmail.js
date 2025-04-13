@@ -12,9 +12,9 @@ async function sendNotificationEmail(toEmail, toName, actionType, reservationInf
   };
 
   const textMap = {
-    book: `Your reservation has been confirmed.\nDetails: ${reservationInfo}`,
-    cancel: `Your reservation has been cancelled.\nDetails: ${reservationInfo}`,
-    update: `Your reservation has been updated.\nNew Details: ${reservationInfo}`
+    book: `${reservationInfo}`,
+    cancel: `${reservationInfo}`,
+    update: `Your reservation has been updated.\nNew Details: \n${reservationInfo}`
   };
 
   try {
