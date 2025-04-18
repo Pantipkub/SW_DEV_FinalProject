@@ -18,6 +18,10 @@ const AppointmentSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         defaut: Date.now
+    },
+    apptEnd: { 
+        type: Date, 
+        required: true 
     }
 });
 
