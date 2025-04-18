@@ -103,6 +103,8 @@ exports.addAppointment=async (req, res, next) => {
         const dateOnly = appointmentDate.toISOString().split('T')[0]; // YYYY-MM-DD
         const timeOnly = appointmentDate.toISOString().split('T')[1].slice(0, 5); // "17:01"
     
+        const appointmentDateEnd = new Date(req.body.apptEnd);
+        const timeOnlyEnd = appointmentDateEnd.toISOString().split('T')[1].slice(0, 5); 
 
 
         //Check for wxisted appointment
@@ -129,7 +131,7 @@ exports.addAppointment=async (req, res, next) => {
             🧾 **Booking Details:**
             • Massage Center: ${massageCenter.name}
             • Date: ${dateOnly}
-            • Time: ${timeOnly || 'N/A'}
+            • Time: ${timeOnly || 'N/A'} - ${timeOnlyEnd || 'N\A'}
 
             Thank you for using our service. We look forward to seeing you! 😊`);
 
@@ -195,6 +197,7 @@ exports.updateAppointment=async (req, res, next) => {
           const appointmentDate = new Date(req.body.apptDate);
           const dateOnly = appointmentDate.toISOString().split('T')[0];
           const timeOnly = appointmentDate.toISOString().split('T')[1].slice(0, 5); // "17:01"
+          const timeOnlyEnd = appointmentEnd.toISOString().split('T')[1].slice(0, 5); 
       
         console.log(`${dateOnly} time : ${timeOnly}`);
         
@@ -207,7 +210,7 @@ exports.updateAppointment=async (req, res, next) => {
 
         📍 Massage Center: ${appointment.massageCenter.name}
         📅 New Date: ${dateOnly}
-        ⏰ New Time: ${timeOnly || 'N/A'}
+        ⏰ New Time: ${timeOnly || 'N/A'} - ${timeOnlyEnd || 'N\A'}
 
 
         Thank you for using our service! 🙌
@@ -244,6 +247,9 @@ exports.deleteAppointment=async (req, res, next) => {
         const appointmentDate = new Date(appointment.apptDate);
         const dateOnly = appointmentDate.toISOString().split('T')[0];
         const timeOnly = appointmentDate.toISOString().split('T')[1].slice(0, 5); // "17:01"
+        const appointmentDateEnd = new Date(appointment.apptEnd);
+        const timeOnlyEnd = appointmentDateEnd.toISOString().split('T')[1].slice(0, 5); 
+        
 
         await appointment.deleteOne();
         
@@ -257,7 +263,7 @@ exports.deleteAppointment=async (req, res, next) => {
 
         📍 Massage Center: ${appointment.massageCenter.name}
         📅 Date: ${dateOnly}
-        ⏰ Time: ${timeOnly || 'N/A'}
+        ⏰ Time: ${timeOnly || 'N/A'} - ${timeOnlyEnd || 'N\A'}
         
         `
         );
