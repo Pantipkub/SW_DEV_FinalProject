@@ -6,11 +6,12 @@ const User = require('../models/User');
 exports.register=async (req, res, next) => {
   try{
     //Distributing body into variables
-    const {name, email, password, role} = req.body;
+    const {name, tel, email, password, role} = req.body;
 
     //Create user
     const user = await User.create({
       name,
+      tel,
       email,
       password,
       role
@@ -23,7 +24,10 @@ exports.register=async (req, res, next) => {
     sendTokenResponse(user, 200, res);
 
   } catch(err){
-    res.status(400).json({success: false});
+    res.status(400).json({
+      success: false,
+      error: err.message || 'Server Error'
+    });
     console.log(err.stack);
   }
 };
@@ -82,6 +86,7 @@ const sendTokenResponse=(user, statusCode, res)=>{
     success: true,
     //add for frontend
     _id: user._id,
+    tel: user.tel,
     name: user.name,
     email: user.email,
     //end for frontend
