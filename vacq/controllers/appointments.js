@@ -1,6 +1,7 @@
 const Appointment = require('../models/Appointment');
 const MassageCenter = require('../models/MassageCenter');
 const sendNotificationEmail = require('../utils/sendNotificationEmail'); // เปลี่ยน path ตามจริง
+const { Types } = require('mongoose');
 
 //@desc     Get all appointments
 //@route    GET /api/v1/appointments
@@ -76,6 +77,25 @@ exports.addAppointment=async (req, res, next) => {
             return res.status(404).json({success:false, message: `No massage center with the id of ${req.params.massageCenterId}`});
         }
 
+        // ดึงเวลานัดใหม่จาก req.body / NEW
+        const appointmentStart = new Date(req.body.apptDate);
+        const appointmentEnd = new Date(req.body.apptEnd);
+
+        // console.log(appointmentStart);
+        // console.log(appointmentEnd);
+
+        // ตรวจสอบเวลาทำการ
+        const timeCheck = checkAppointmentTime(appointmentStart, appointmentEnd, massageCenter);
+        if (!timeCheck.valid) {
+            return res.status(400).json({ success: false, message: timeCheck.message });
+        }
+
+        // ตรวจสอบการซ้อนทับของการนัดหมาย
+        const overlapCheck = await checkOverlappingAppointments(appointmentStart, appointmentEnd, massageCenter._id);
+        if (!overlapCheck.valid) {
+            return res.status(400).json({ success: false, message: overlapCheck.message });
+        }
+
         //Add user Id to req.body
         req.body.user = req.user.id;
 
@@ -134,9 +154,35 @@ exports.updateAppointment=async (req, res, next) => {
             return res.status(404).json({success:false, message:`No appointment with the id of ${req.params.id}`});
         }
 
-        //Make sure user is the appointment owner
+        //Make sure user is the appointment owner / NEW
         if(appointment.user.toString() !== req.user.id && req.user.role !== 'admin'){
             return res.status(401).json({succes: false, message:`User ${req.user.id} is not authorized to update this appointment`})
+        }
+
+        // ดึงเวลานัดใหม่จาก req.body
+        const appointmentStart = new Date(req.body.apptDate);
+        const appointmentEnd = new Date(req.body.apptEnd);
+
+        // เช็คเวลาทำการ
+        const timeCheck = checkAppointmentTime(appointmentStart, appointmentEnd, appointment.massageCenter);
+        if (!timeCheck.valid) {
+            return res.status(400).json({ success: false, message: timeCheck.message });
+        }
+        
+        
+        // เช็คการซ้อนทับ (ยกเว้นตัวเอง)
+        const overlapCheck = await Appointment.findOne({
+            _id: { $ne: new Types.ObjectId(String(req.params.id)) }, // ไม่ใช่นัดเดิม
+            massageCenter: appointment.massageCenter._id,
+            $or: [
+                {
+                    apptStart: { $lt: appointmentEnd },
+                    apptEnd: { $gt: appointmentStart }
+                }
+            ]
+        });
+        if (overlapCheck) {
+            return res.status(400).json({ success: false, message: 'Appointment overlaps with another booking' });
         }
 
         appointment = await Appointment.findByIdAndUpdate(req.params.id, req.body, {
@@ -225,3 +271,86 @@ exports.deleteAppointment=async (req, res, next) => {
         return res.status(500).json({success: false, message: "Cannot delete Appointment"});
     }
 };
+
+// ฟังก์ชันสำหรับเช็คเวลาทำการและเวลาในการนัดหมาย
+const checkAppointmentTime = (appointmentStart, appointmentEnd, massageCenter) => {
+    const [openHour, openMin] = massageCenter.openTime.split(':').map(Number);
+    const [closeHour, closeMin] = massageCenter.closeTime.split(':').map(Number);
+
+    const openDate = new Date(appointmentStart);
+    openDate.setUTCHours(openHour, openMin, 0, 0);
+
+    const closeDate = new Date(appointmentStart);
+    closeDate.setUTCHours(closeHour, closeMin, 0, 0);
+
+    // ตรวจสอบว่าเวลานัดหมายอยู่ในช่วงเวลาทำการหรือไม่
+    if (appointmentStart < openDate || appointmentEnd > closeDate) {
+        return { valid: false, message: 'Appointment is outside business hours' };
+    }
+
+    return { valid: true };
+};
+
+const checkOverlappingAppointments = async (appointmentStart, appointmentEnd, massageCenterId) => {
+    // Step 1: หา list การจองในวันเดียวกันของร้านนั้น
+    const startOfDay = new Date(appointmentStart);
+    startOfDay.setUTCHours(0, 0, 0, 0);
+    
+    const endOfDay = new Date(appointmentStart);
+    endOfDay.setUTCHours(23, 59, 59, 999);
+    
+    const sameDayAppointments = await Appointment.find({
+        massageCenter: massageCenterId,
+        apptStart: { $gte: startOfDay, $lte: endOfDay }
+    });
+    
+    // Step 2: เช็คด้วย logic ซ้อนทับแบบ manual
+    for (let appt of sameDayAppointments) {
+        if (
+            appointmentStart < appt.apptEnd &&
+            appointmentEnd > appt.apptStart
+        ) {
+            return {
+                valid: false,
+                message: "Appointment overlaps with existing booking"
+            };
+        }
+    }
+    
+    return { valid: true };
+};
+
+
+// ฟังก์ชันสำหรับตรวจสอบการนัดหมายที่ซ้อนทับ
+// const checkOverlappingAppointments = async (appointmentStart, appointmentEnd, massageCenterId) => {
+//     // หาวันเริ่มและสิ้นสุดของวันที่เลือก
+//     const startOfDay = new Date(appointmentStart);
+//     startOfDay.setUTCHours(0, 0, 0, 0);
+
+//     const endOfDay = new Date(appointmentStart);
+//     endOfDay.setUTCHours(23, 59, 59, 999);
+
+//     console.log(startOfDay);
+//     console.log(endOfDay);
+
+//     const isOverlapping = await Appointment.findOne({
+//         massageCenter: massageCenterId,
+//         $and: [
+//             {
+//                 // กรองเฉพาะ appointments ที่อยู่ในวันเดียวกัน
+//                 apptStart: { $lt: endOfDay },
+//                 apptEnd: { $gt: startOfDay }
+//             },
+//             {
+//                 // ตรวจช่วงเวลาซ้อนทับ
+//                 apptStart: { $lt: appointmentEnd },
+//                 apptEnd: { $gt: appointmentStart }
+//             }
+//         ]
+//     });
+//     if (isOverlapping) {
+//         return { valid: false, message: 'Appointment overlaps with another booking' };
+//     }
+
+//     return { valid: true };
+// };
