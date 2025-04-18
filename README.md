@@ -1,7 +1,6 @@
 # Massage Reservation
-Software Development Practice's Final Project
-
-
+A Software Development Practice's Final Project
+<br><br>
 ## 📬 API Endpoints
 
 #### Massage Center 🚩
