@@ -28,6 +28,7 @@ connectDB();
 const massageCenters = require("./routes/massageCenters");
 const auth = require("./routes/auth");
 const appointments = require('./routes/appointments');
+const statistics = require('./routes/statistics');
 
 const app = express();
 
@@ -76,7 +77,7 @@ app.use('/api-docs',swaggerUI.serve, swaggerUI.setup(swaggerDocs));
 app.use("/api/v1/massageCenters", massageCenters); //If the request refers to "/api/v1/massageCenters", it will forward to the massageCenters ("./routes/massageCenters" path as of the line above)
 app.use("/api/v1/auth", auth);
 app.use('/api/v1/appointments', appointments);
-
+app.use('/api/v1/statistics', statistics);
 
 
 //Cookie parser
