@@ -31,16 +31,7 @@ const MassageCenterSchema = new mongoose.Schema({
     region:{
         type: String,
         required: [true,'Please add a region']
-    },
-    openTime: { 
-        type: String, 
-        required: true 
-    },  // "10:00"
-    closeTime: { 
-        type: String, 
-        required: true 
-    }, // "20:00"
-
+    }
 }, {
     toJSON: {virtuals:true},
     toObject: {virtuals:true}
