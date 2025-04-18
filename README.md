@@ -21,7 +21,7 @@ A Software Development Practice's Final Project
 | `POST` | `/api/v1/auth/register` | Register user |
 | `POST` | `/api/v1/auth/login` | Login user |
 | `GET` | `/api/v1/auth/logout` | Logout user |
-| `PUT` | `/api/v1/auth/me` | Get Logged in User with Token |
+| `GET` | `/api/v1/auth/me` | Get Logged in User with Token |
 
 
 #### Appointments 📩
