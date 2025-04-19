@@ -1,6 +1,7 @@
 # Massage Reservation
-A Software Development Practice's Final Project
-<br><br>
+Software Development Practice's Final Project
+
+
 ## 📬 API Endpoints
 
 #### Massage Center 🚩
@@ -21,7 +22,7 @@ A Software Development Practice's Final Project
 | `POST` | `/api/v1/auth/register` | Register user |
 | `POST` | `/api/v1/auth/login` | Login user |
 | `GET` | `/api/v1/auth/logout` | Logout user |
-| `GET` | `/api/v1/auth/me` | Get Logged in User with Token |
+| `PUT` | `/api/v1/auth/me` | Get Logged in User with Token |
 
 
 #### Appointments 📩
