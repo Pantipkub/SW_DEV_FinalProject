@@ -298,6 +298,7 @@ const checkAppointmentTime = (appointmentStart, appointmentEnd, massageCenter) =
 };
 
 const checkOverlappingAppointments = async (appointmentStart, appointmentEnd, massageCenterId) => {
+
     // Step 1: หา list การจองในวันเดียวกันของร้านนั้น
     const startOfDay = new Date(appointmentStart);
     startOfDay.setUTCHours(0, 0, 0, 0);
@@ -309,7 +310,7 @@ const checkOverlappingAppointments = async (appointmentStart, appointmentEnd, ma
         massageCenter: massageCenterId,
         apptStart: { $gte: startOfDay, $lte: endOfDay }
     });
-    
+    console.log(startOfDay);
     // Step 2: เช็คด้วย logic ซ้อนทับแบบ manual
     for (let appt of sameDayAppointments) {
         if (
