@@ -135,7 +135,7 @@ exports.addAppointment=async (req, res, next) => {
 
             Thank you for using our service. We look forward to seeing you! 😊`);
 
-        res.status(200).json({
+        res.status(201).json({
             success: true,
             data: appointment
         });
