@@ -314,7 +314,7 @@ const checkOverlappingAppointments = async (appointmentStart, appointmentEnd, ma
     for (let appt of sameDayAppointments) {
         if (
             appointmentStart < appt.apptEnd &&
-            appointmentEnd > appt.apptStart
+            appointmentEnd > appt.apptDate
         ) {
             return {
                 valid: false,
