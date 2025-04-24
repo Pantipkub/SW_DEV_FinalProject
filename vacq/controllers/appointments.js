@@ -169,12 +169,8 @@ exports.updateAppointment=async (req, res, next) => {
         const overlapCheck = await Appointment.findOne({
             _id: { $ne: new Types.ObjectId(String(req.params.id)) }, // Check for overlapping appointments, excluding the current one
             massageCenter: appointment.massageCenter._id,
-            $or: [
-                {
-                    apptDate: { $lt: appointmentEnd },
-                    apptEnd: { $gt: appointmentStart }
-                }
-            ]
+            apptDate: { $lt: appointmentEnd },
+            apptEnd: { $gt: appointmentStart }
         });
         if (overlapCheck) {
             return res.status(400).json({ success: false, message: 'Appointment overlaps with another booking' });
@@ -300,7 +296,7 @@ const checkOverlappingAppointments = async (appointmentStart, appointmentEnd, ma
     
     const sameDayAppointments = await Appointment.find({
         massageCenter: massageCenterId,
-        apptStart: { $gte: startOfDay, $lte: endOfDay }
+        apptDate: { $gte: startOfDay, $lte: endOfDay }
     });
     
     // Step 2: Manually check for overlapping logic
