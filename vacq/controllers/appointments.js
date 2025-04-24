@@ -171,7 +171,7 @@ exports.updateAppointment=async (req, res, next) => {
             massageCenter: appointment.massageCenter._id,
             $or: [
                 {
-                    apptStart: { $lt: appointmentEnd },
+                    apptDate: { $lt: appointmentEnd },
                     apptEnd: { $gt: appointmentStart }
                 }
             ]
