@@ -77,20 +77,17 @@ exports.addAppointment=async (req, res, next) => {
             return res.status(404).json({success:false, message: `No massage center with the id of ${req.params.massageCenterId}`});
         }
 
-        // ดึงเวลานัดใหม่จาก req.body / NEW
-        const appointmentStart = new Date(req.body.apptDate);
+        // Extract the start and end time of the appointment from req.body
+        const appointmentStart = new Date(req.body.apptDate);   // We use apptDate as a apptStart
         const appointmentEnd = new Date(req.body.apptEnd);
 
-        // console.log(appointmentStart);
-        // console.log(appointmentEnd);
-
-        // ตรวจสอบเวลาทำการ
+        // Check if the appointment is within business hours
         const timeCheck = checkAppointmentTime(appointmentStart, appointmentEnd, massageCenter);
         if (!timeCheck.valid) {
             return res.status(400).json({ success: false, message: timeCheck.message });
         }
 
-        // ตรวจสอบการซ้อนทับของการนัดหมาย
+        // Check for overlapping appointments
         const overlapCheck = await checkOverlappingAppointments(appointmentStart, appointmentEnd, massageCenter._id);
         if (!overlapCheck.valid) {
             return res.status(400).json({ success: false, message: overlapCheck.message });
@@ -101,13 +98,13 @@ exports.addAppointment=async (req, res, next) => {
 
         const appointmentDate = new Date(req.body.apptDate);
         const dateOnly = appointmentDate.toISOString().split('T')[0]; // YYYY-MM-DD
-        const timeOnly = appointmentDate.toISOString().split('T')[1].slice(0, 5); // "17:01"
+        const timeOnly = appointmentDate.toISOString().split('T')[1].slice(0, 5); // "HH:mm"
     
         const appointmentDateEnd = new Date(req.body.apptEnd);
         const timeOnlyEnd = appointmentDateEnd.toISOString().split('T')[1].slice(0, 5); 
 
 
-        //Check for wxisted appointment
+        //Check for existed appointment
         const existedAppointments = await Appointment.find({user:req.user.id});
 
         //If the user is not an admin, they can only create 3 appointment.
@@ -119,7 +116,7 @@ exports.addAppointment=async (req, res, next) => {
 
          //Send email notification
          await sendNotificationEmail(
-            req.user.email,  // ต้องแน่ใจว่า req.user มี email ด้วยนะ
+            req.user.email,  // Make sure req.user contains an email
             req.user.name || "User",
             "book",
             `📍 Massage Center Reservation Confirmation
@@ -156,25 +153,21 @@ exports.updateAppointment=async (req, res, next) => {
             return res.status(404).json({success:false, message:`No appointment with the id of ${req.params.id}`});
         }
 
-        //Make sure user is the appointment owner / NEW
+        //Make sure user is the appointment owner
         if(appointment.user.toString() !== req.user.id && req.user.role !== 'admin'){
             return res.status(401).json({succes: false, message:`User ${req.user.id} is not authorized to update this appointment`})
         }
 
-        // ดึงเวลานัดใหม่จาก req.body
         const appointmentStart = new Date(req.body.apptDate);
         const appointmentEnd = new Date(req.body.apptEnd);
-
-        // เช็คเวลาทำการ
+        
         const timeCheck = checkAppointmentTime(appointmentStart, appointmentEnd, appointment.massageCenter);
         if (!timeCheck.valid) {
             return res.status(400).json({ success: false, message: timeCheck.message });
         }
         
-        
-        // เช็คการซ้อนทับ (ยกเว้นตัวเอง)
         const overlapCheck = await Appointment.findOne({
-            _id: { $ne: new Types.ObjectId(String(req.params.id)) }, // ไม่ใช่นัดเดิม
+            _id: { $ne: new Types.ObjectId(String(req.params.id)) }, // Check for overlapping appointments, excluding the current one
             massageCenter: appointment.massageCenter._id,
             $or: [
                 {
@@ -196,7 +189,7 @@ exports.updateAppointment=async (req, res, next) => {
           });
           const appointmentDate = new Date(req.body.apptDate);
           const dateOnly = appointmentDate.toISOString().split('T')[0];
-          const timeOnly = appointmentDate.toISOString().split('T')[1].slice(0, 5); // "17:01"
+          const timeOnly = appointmentDate.toISOString().split('T')[1].slice(0, 5); // "HH:mm"
           const timeOnlyEnd = appointmentEnd.toISOString().split('T')[1].slice(0, 5); 
       
         console.log(`${dateOnly} time : ${timeOnly}`);
@@ -278,7 +271,7 @@ exports.deleteAppointment=async (req, res, next) => {
     }
 };
 
-// ฟังก์ชันสำหรับเช็คเวลาทำการและเวลาในการนัดหมาย
+// Function to check if the appointment time is within business hours
 const checkAppointmentTime = (appointmentStart, appointmentEnd, massageCenter) => {
     const [openHour, openMin] = massageCenter.openTime.split(':').map(Number);
     const [closeHour, closeMin] = massageCenter.closeTime.split(':').map(Number);
@@ -289,7 +282,7 @@ const checkAppointmentTime = (appointmentStart, appointmentEnd, massageCenter) =
     const closeDate = new Date(appointmentStart);
     closeDate.setUTCHours(closeHour, closeMin, 0, 0);
 
-    // ตรวจสอบว่าเวลานัดหมายอยู่ในช่วงเวลาทำการหรือไม่
+    // Check if the appointment is outside business hours
     if (appointmentStart < openDate || appointmentEnd > closeDate) {
         return { valid: false, message: 'Appointment is outside business hours' };
     }
@@ -298,7 +291,7 @@ const checkAppointmentTime = (appointmentStart, appointmentEnd, massageCenter) =
 };
 
 const checkOverlappingAppointments = async (appointmentStart, appointmentEnd, massageCenterId) => {
-    // Step 1: หา list การจองในวันเดียวกันของร้านนั้น
+    // Step 1: Retrieve all appointments at this massage center on the same day
     const startOfDay = new Date(appointmentStart);
     startOfDay.setUTCHours(0, 0, 0, 0);
     
@@ -310,7 +303,7 @@ const checkOverlappingAppointments = async (appointmentStart, appointmentEnd, ma
         apptStart: { $gte: startOfDay, $lte: endOfDay }
     });
     
-    // Step 2: เช็คด้วย logic ซ้อนทับแบบ manual
+    // Step 2: Manually check for overlapping logic
     for (let appt of sameDayAppointments) {
         if (
             appointmentStart < appt.apptEnd &&
@@ -326,37 +319,3 @@ const checkOverlappingAppointments = async (appointmentStart, appointmentEnd, ma
     return { valid: true };
 };
 
-
-// ฟังก์ชันสำหรับตรวจสอบการนัดหมายที่ซ้อนทับ
-// const checkOverlappingAppointments = async (appointmentStart, appointmentEnd, massageCenterId) => {
-//     // หาวันเริ่มและสิ้นสุดของวันที่เลือก
-//     const startOfDay = new Date(appointmentStart);
-//     startOfDay.setUTCHours(0, 0, 0, 0);
-
-//     const endOfDay = new Date(appointmentStart);
-//     endOfDay.setUTCHours(23, 59, 59, 999);
-
-//     console.log(startOfDay);
-//     console.log(endOfDay);
-
-//     const isOverlapping = await Appointment.findOne({
-//         massageCenter: massageCenterId,
-//         $and: [
-//             {
-//                 // กรองเฉพาะ appointments ที่อยู่ในวันเดียวกัน
-//                 apptStart: { $lt: endOfDay },
-//                 apptEnd: { $gt: startOfDay }
-//             },
-//             {
-//                 // ตรวจช่วงเวลาซ้อนทับ
-//                 apptStart: { $lt: appointmentEnd },
-//                 apptEnd: { $gt: appointmentStart }
-//             }
-//         ]
-//     });
-//     if (isOverlapping) {
-//         return { valid: false, message: 'Appointment overlaps with another booking' };
-//     }
-
-//     return { valid: true };
-// };

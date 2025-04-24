@@ -1,22 +1,24 @@
 const Appointment = require('../models/Appointment');
 const mongoose = require('mongoose');
-const MassageCenter = require('../models/MassageCenter'); // import model ร้านนวดด้วย
+const MassageCenter = require('../models/MassageCenter'); // Import massage center model
 
-// Get statistics for a specific massage center
+// Get daily reservation statistics for a specific massage center
 exports.getDailyReservations = async (req, res, next) => {
     try {
-        const massageCenterId = req.params.massageCenterId; // รับ id ร้านนวดมาจาก URL
-        // ตรวจสอบว่า massageCenterId เป็น ObjectId ที่ถูกต้อง
+        const massageCenterId = req.params.massageCenterId; // Get massage center's id from the URL
+        
+      	// Validate if massageCenterId is a valid MongoDB ObjectId
         if (!mongoose.Types.ObjectId.isValid(massageCenterId)) {
             return res.status(400).json({ success: false, message: 'Invalid massage center ID format' });
         }
 
-        // ตรวจสอบว่ามีร้านนวดนี้อยู่จริงหรือไม่
+        // Check if the massage center exists in the database
         const centerExists = await MassageCenter.findById(massageCenterId);
         if (!centerExists) {
             return res.status(404).json({ success: false, message: 'Massage center not found' });
         }
-
+		
+      	// Aggregate daily appointment counts for the specified massage center
         const stats = await Appointment.aggregate([
             { 
               $match: { massageCenter: new mongoose.Types.ObjectId(massageCenterId) } 
@@ -29,9 +31,9 @@ exports.getDailyReservations = async (req, res, next) => {
             },
             { 
               $project: { 
-                  date: "$_id",  // เปลี่ยน _id เป็น date
+                  date: "$_id",  // Rename _id to date
                   totalAppointments: 1,
-                  _id: 0 // ซ่อน _id ดั้งเดิม
+                  _id: 0 		 // Exclude the original _id field
               }
             },
             { $sort: { date: 1 } }
@@ -49,7 +51,7 @@ exports.getDailyReservations = async (req, res, next) => {
 };
 
 
-// Get most popular shops
+// Get the top 3 most popular massage centers based on appointment counts
 exports.getPopularMassageCenters = async (req, res, next) => {
     try {
         const stats = await Appointment.aggregate([
@@ -59,11 +61,11 @@ exports.getPopularMassageCenters = async (req, res, next) => {
                     totalBookings: { $sum: 1 }
                 }
             },
-            { $sort: { totalBookings: -1 } },
-            { $limit: 3 }, 
+            { $sort: { totalBookings: -1 } },	// Sort descending by total bookings
+            { $limit: 3 }, 						// Limit to top 3 results
             {
                 $lookup: {
-                    from: "massagecenters",
+                    from: "massagecenters",		// Join with MassageCenter collection
                     localField: "_id",
                     foreignField: "_id",
                     as: "massageCenterDetails"
