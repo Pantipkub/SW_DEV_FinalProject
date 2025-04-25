@@ -18,8 +18,8 @@ exports.register=async (req, res, next) => {
     });
 
     //Create token
-    // const token = user.getSignedJwtToken();
-    // res.status(200).json({success: true, token});
+    //const token = user.getSignedJwtToken();
+    //res.status(200).json({success: true, token});
     // Running both lines above by the sendTokenResponse function
     sendTokenResponse(user, 200, res);
 

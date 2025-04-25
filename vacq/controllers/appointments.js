@@ -116,7 +116,6 @@ exports.addAppointment=async (req, res, next) => {
         }
         
         const appointment = await Appointment.create(req.body);
-
          //Send email notification
          await sendNotificationEmail(
             req.user.email,  // ต้องแน่ใจว่า req.user มี email ด้วยนะ
@@ -134,7 +133,7 @@ exports.addAppointment=async (req, res, next) => {
             • Time: ${timeOnly || 'N/A'} - ${timeOnlyEnd || 'N\A'}
 
             Thank you for using our service. We look forward to seeing you! 😊`);
-
+        
         res.status(200).json({
             success: true,
             data: appointment
