@@ -172,6 +172,7 @@ exports.updateAppointment=async (req, res, next) => {
             apptDate: { $lt: appointmentEnd },
             apptEnd: { $gt: appointmentStart }
         });
+        
         if (overlapCheck) {
             return res.status(400).json({ success: false, message: 'Appointment overlaps with another booking' });
         }
@@ -182,11 +183,12 @@ exports.updateAppointment=async (req, res, next) => {
         }).populate({
             path: 'massageCenter',
             select: 'name province tel'
-          });
-          const appointmentDate = new Date(req.body.apptDate);
-          const dateOnly = appointmentDate.toISOString().split('T')[0];
-          const timeOnly = appointmentDate.toISOString().split('T')[1].slice(0, 5); // "HH:mm"
-          const timeOnlyEnd = appointmentEnd.toISOString().split('T')[1].slice(0, 5); 
+        });
+        
+        const appointmentDate = new Date(req.body.apptDate);
+        const dateOnly = appointmentDate.toISOString().split('T')[0];
+        const timeOnly = appointmentDate.toISOString().split('T')[1].slice(0, 5); // "HH:mm"
+        const timeOnlyEnd = appointmentEnd.toISOString().split('T')[1].slice(0, 5); 
       
         console.log(`${dateOnly} time : ${timeOnly}`);
         
