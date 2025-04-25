@@ -1,4 +1,4 @@
-require('dotenv').config({ path: './config/.env' }); // ปรับ path ตามที่ไฟล์ .env อยู่จริง
+require('dotenv').config({ path: './config/.env' }); // Adjust the path to match the actual location of the .env file 
 const mailjet = require('node-mailjet').apiConnect(
   process.env.MJ_APIKEY_PUBLIC,
   process.env.MJ_APIKEY_PRIVATE
